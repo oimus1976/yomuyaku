@@ -1,0 +1,14 @@
+# Changelog
+
+## [Unreleased]
+
+### Added
+
+- FastAPIベースのWebアプリ初期構成
+- 固定サンプルによる審査用デモ
+- PDF / PNG / JPEGアップロードAPI
+- Geminiによる文書構造化
+- ADK Agentによる行動整理、根拠確認、文書改善点抽出
+- レスポンシブな住民向け・職員向け結果画面
+- Cloud Run用Dockerfile
+- ヘルスチェックと基本テスト

@@ -1,0 +1,63 @@
+:root {
+  font-family: "Noto Sans JP", system-ui, sans-serif;
+  color: #17221c;
+  background: #f5f7f4;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.hero {
+  background: linear-gradient(135deg, #173f31, #2e6b50);
+  color: white;
+  padding: 48px 20px 58px;
+}
+.hero-inner, main, footer { max-width: 1100px; margin: 0 auto; }
+.eyebrow { font-size: .82rem; letter-spacing: .08em; opacity: .8; }
+h1 { font-size: clamp(2.5rem, 8vw, 5rem); margin: 8px 0 0; }
+.tagline { font-size: clamp(1.2rem, 3vw, 2rem); margin: 4px 0 14px; }
+.lead { max-width: 650px; opacity: .9; }
+main { padding: 24px 16px 60px; }
+.panel {
+  background: white;
+  border: 1px solid #dfe6e0;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 6px 24px rgba(20, 50, 35, .06);
+  margin-bottom: 20px;
+}
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+button, .file-button {
+  border: 0; border-radius: 999px; padding: 12px 20px;
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.primary { background: #1f6a49; color: white; }
+.file-button { background: #e5eee8; color: #204533; }
+.file-button input { display: none; }
+.notice { font-size: .88rem; color: #5f6e64; margin-top: 18px; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.section-label { color: #1f6a49; font-weight: 700; font-size: .85rem; }
+pre { white-space: pre-wrap; font-family: inherit; line-height: 1.7; color: #47544b; }
+.tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.tab { background: #edf1ee; color: #415047; }
+.tab.active { background: #173f31; color: white; }
+.deadline-card {
+  background: #fff3cf; border-left: 6px solid #d28b00;
+  border-radius: 12px; padding: 16px; margin-bottom: 22px;
+}
+.deadline-card span { display: block; font-size: .8rem; }
+.deadline-card strong { font-size: 1.3rem; }
+.checklist { list-style: none; padding: 0; }
+.checklist li { margin: 10px 0; padding-left: 32px; position: relative; }
+.checklist li::before {
+  content: "□"; position: absolute; left: 0; top: -3px;
+  font-size: 1.5rem; color: #1f6a49;
+}
+.warnings { background: #fff8e8; border-radius: 12px; padding: 8px 18px; }
+.steps li { padding: 6px 0; }
+.error { border-color: #d84d4d; color: #9f2222; }
+.hidden { display: none !important; }
+footer { padding: 0 20px 40px; color: #647168; font-size: .85rem; }
+@media (max-width: 760px) {
+  .hero { padding-top: 34px; }
+  .result-grid { grid-template-columns: 1fr; }
+  .panel { padding: 18px; border-radius: 14px; }
+}

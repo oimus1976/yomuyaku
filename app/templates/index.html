@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ヨムヤク｜行政通知を、行動できる案内へ。</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Google AI Dojo 2026 Season 2</p>
+      <h1>ヨムヤク</h1>
+      <p class="tagline">行政通知を、行動できる案内へ。</p>
+      <p class="lead">原文を置き換えず、期限・必要書類・することを読み解きます。</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel start-panel">
+      <h2>文書を読み解く</h2>
+      <div class="actions">
+        <button id="sampleButton" class="primary">サンプルで試す</button>
+        <label class="file-button">
+          PDF・画像を選ぶ
+          <input id="fileInput" type="file" accept=".pdf,image/png,image/jpeg">
+        </label>
+      </div>
+      <p class="notice">実証用です。個人情報・機密情報を含む文書はアップロードしないでください。結果は正式な行政判断ではありません。</p>
+    </section>
+
+    <section id="progress" class="panel hidden" aria-live="polite">
+      <h2>4つの担当が確認しています</h2>
+      <ol class="steps">
+        <li>Document Reader：文書を読み取る</li>
+        <li>Action Organizer：行動順に整理する</li>
+        <li>Grounding Reviewer：推測の混入を確認する</li>
+        <li>Document Coach：文書改善点を探す</li>
+      </ol>
+    </section>
+
+    <section id="errorPanel" class="panel error hidden"></section>
+
+    <section id="result" class="hidden">
+      <div class="result-grid">
+        <article class="panel original">
+          <div class="section-label">原文</div>
+          <h2 id="documentTitle">行政通知</h2>
+          <pre id="originalText"></pre>
+        </article>
+
+        <article class="panel transformed">
+          <div class="tabs">
+            <button class="tab active" data-tab="resident">住民向け</button>
+            <button class="tab" data-tab="staff">職員向け</button>
+          </div>
+
+          <div id="residentTab">
+            <div class="deadline-card">
+              <span>期限</span>
+              <strong id="deadline">文書から確認できません</strong>
+            </div>
+            <h3>あなたがすること</h3>
+            <ul id="actionsList" class="checklist"></ul>
+            <h3>必要なもの</h3>
+            <ul id="documentsList"></ul>
+            <h3>分からないこと</h3>
+            <ul id="unknownsList"></ul>
+            <h3>問い合わせ先</h3>
+            <p id="contact"></p>
+          </div>
+
+          <div id="staffTab" class="hidden">
+            <h3>改善候補</h3>
+            <ul id="improvementsList"></ul>
+            <h3>曖昧な表現</h3>
+            <ul id="ambiguousList"></ul>
+            <h3>不足している情報</h3>
+            <ul id="missingList"></ul>
+          </div>
+        </article>
+      </div>
+      <div id="warnings" class="warnings"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>ヨムヤクは原文の理解を補助する実証アプリです。正式な手続は原文と担当窓口で確認してください。</p>
+  </footer>
+
+<script>
+const sampleText = {{ sample_text | tojson }};
+const sampleButton = document.getElementById("sampleButton");
+const fileInput = document.getElementById("fileInput");
+const progress = document.getElementById("progress");
+const result = document.getElementById("result");
+const errorPanel = document.getElementById("errorPanel");
+
+function setLoading(loading) {
+  progress.classList.toggle("hidden", !loading);
+  sampleButton.disabled = loading;
+  fileInput.disabled = loading;
+}
+function showError(message) {
+  errorPanel.textContent = message;
+  errorPanel.classList.remove("hidden");
+}
+function fillList(id, items, emptyText = "文書から確認できません") {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  const values = items && items.length ? items : [emptyText];
+  values.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    el.appendChild(li);
+  });
+}
+function render(data, original) {
+  document.getElementById("documentTitle").textContent = data.document.title || "行政通知";
+  document.getElementById("originalText").textContent = original || "アップロードされた文書";
+  document.getElementById("deadline").textContent = data.resident.deadline || "文書から確認できません";
+  fillList("actionsList", data.resident.actions);
+  fillList("documentsList", data.resident.required_documents);
+  fillList("unknownsList", data.resident.unknowns, "特にありません");
+  document.getElementById("contact").textContent = data.resident.contact || "文書から確認できません";
+  fillList("improvementsList", data.staff.improvement_points, "改善候補はありません");
+  fillList("ambiguousList", data.staff.ambiguous_expressions, "検出されませんでした");
+  fillList("missingList", data.staff.missing_information, "検出されませんでした");
+  const warnings = document.getElementById("warnings");
+  warnings.innerHTML = "";
+  (data.warnings || []).forEach(w => {
+    const p = document.createElement("p");
+    p.textContent = w;
+    warnings.appendChild(p);
+  });
+  result.classList.remove("hidden");
+}
+async function postSample() {
+  setLoading(true); errorPanel.classList.add("hidden");
+  try {
+    await new Promise(r => setTimeout(r, 900));
+    const response = await fetch("/api/sample", {method: "POST"});
+    render(await response.json(), sampleText);
+  } catch (e) {
+    showError("サンプルの表示に失敗しました。");
+  } finally { setLoading(false); }
+}
+async function postFile(file) {
+  setLoading(true); errorPanel.classList.add("hidden");
+  const form = new FormData();
+  form.append("file", file);
+  try {
+    const response = await fetch("/api/analyze", {method: "POST", body: form});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "解析に失敗しました。");
+    render(data, `選択ファイル: ${file.name}`);
+  } catch (e) {
+    showError(e.message);
+  } finally { setLoading(false); }
+}
+sampleButton.addEventListener("click", postSample);
+fileInput.addEventListener("change", e => {
+  if (e.target.files[0]) postFile(e.target.files[0]);
+});
+document.querySelectorAll(".tab").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    button.classList.add("active");
+    const resident = button.dataset.tab === "resident";
+    document.getElementById("residentTab").classList.toggle("hidden", !resident);
+    document.getElementById("staffTab").classList.toggle("hidden", resident);
+  });
+});
+</script>
+</body>
+</html>
