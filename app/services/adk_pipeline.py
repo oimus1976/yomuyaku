@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import os
 import uuid
 
@@ -14,6 +15,22 @@ from app.models import AnalysisResult, DocumentFacts, ResidentView, StaffView
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 APP_NAME = "yomuyaku"
+
+
+def clean_json_text(text: str) -> str:
+    """ADKが返すMarkdownコードフェンス付きJSONを正規化する。"""
+    value = text.strip()
+
+    # ```json ... ``` または ``` ... ``` を除去
+    match = re.fullmatch(
+        r"```(?:json)?\s*(.*?)\s*```",
+        value,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if match:
+        value = match.group(1).strip()
+
+    return value
 
 organizer_agent = Agent(
     name="action_organizer",
@@ -82,7 +99,7 @@ async def _run_agent(agent: Agent, payload: dict, output_model):
             final_text = "".join(part.text or "" for part in event.content.parts)
     if not final_text:
         raise RuntimeError(f"{agent.name} から応答がありません。")
-    return output_model.model_validate_json(final_text)
+    return output_model.model_validate_json(clean_json_text(final_text))
 
 
 class WarningList(AnalysisResult):
@@ -126,12 +143,36 @@ async def organize_and_review(document: DocumentFacts) -> AnalysisResult:
                 final_text = "".join(part.text or "" for part in event.content.parts)
         if not final_text:
             raise RuntimeError(f"{agent.name} から応答がありません。")
-        return json.loads(final_text)
+        return json.loads(clean_json_text(final_text))
 
     warnings_data = await run_raw(reviewer_agent, warning_payload)
     staff_data = await run_raw(coach_agent, document.model_dump())
 
-    warnings = warnings_data.get("warnings", [])
+    def normalize_warning(item):
+        if isinstance(item, str):
+            return item
+        if isinstance(item, dict):
+            return (
+                item.get("message")
+                or item.get("warning")
+                or item.get("detail")
+                or str(item)
+            )
+        return str(item)
+
+    if isinstance(warnings_data, list):
+        warnings = [normalize_warning(item) for item in warnings_data]
+    elif isinstance(warnings_data, dict):
+        raw_warnings = warnings_data.get("warnings", [])
+        if isinstance(raw_warnings, list):
+            warnings = [normalize_warning(item) for item in raw_warnings]
+        else:
+            warnings = [normalize_warning(raw_warnings)]
+    else:
+        warnings = [
+            "正式な判断は原文と担当窓口で確認してください。"
+        ]
+
     staff = StaffView.model_validate(staff_data)
 
     return AnalysisResult(

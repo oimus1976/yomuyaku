@@ -20,3 +20,8 @@
 ### Fixed
 
 - 任意文書の解析失敗時にCloud Runログへ例外詳細を記録するよう修正
+
+### Fixed
+
+- ADKがMarkdownコードフェンス付きJSONを返した場合にも解析できるよう修正
+- Grounding Reviewerの警告配列および警告オブジェクトを表示用文字列へ正規化

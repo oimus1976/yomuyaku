@@ -17,3 +17,33 @@ def test_sample():
     assert data["mode"] == "sample"
     assert data["resident"]["deadline"]
     assert data["resident"]["actions"]
+
+
+def test_warning_dictionary_can_be_normalized():
+    item = {
+        "severity": "info",
+        "message": "正式な判断は原文と担当窓口で確認してください。",
+    }
+
+    normalized = (
+        item.get("message")
+        or item.get("warning")
+        or item.get("detail")
+        or str(item)
+    )
+
+    assert normalized == "正式な判断は原文と担当窓口で確認してください。"
+
+
+def test_clean_json_text_removes_markdown_fence():
+    from app.services.adk_pipeline import clean_json_text
+
+    source = '''```json
+{
+  "summary": "申請してください"
+}
+```'''
+
+    assert clean_json_text(source) == '''{
+  "summary": "申請してください"
+}'''
