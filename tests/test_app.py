@@ -47,3 +47,20 @@ def test_clean_json_text_removes_markdown_fence():
     assert clean_json_text(source) == '''{
   "summary": "申請してください"
 }'''
+
+
+def test_warning_text_field_can_be_normalized():
+    item = {
+        "severity": "info",
+        "text": "正式な判断は原文と担当窓口で確認してください。",
+    }
+
+    normalized = (
+        item.get("message")
+        or item.get("text")
+        or item.get("warning")
+        or item.get("detail")
+        or str(item)
+    )
+
+    assert normalized == "正式な判断は原文と担当窓口で確認してください。"

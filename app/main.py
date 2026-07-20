@@ -59,6 +59,10 @@ async def analyze(file: UploadFile = File(...)):
 
     try:
         document = read_document(content, file.content_type)
+        logger.info(
+            "Document Reader result: %s",
+            document.model_dump_json(exclude_none=True),
+        )
         result = await organize_and_review(document)
         return result.model_dump()
     except RuntimeError as exc:

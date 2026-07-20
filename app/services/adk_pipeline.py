@@ -38,11 +38,31 @@ organizer_agent = Agent(
     description="行政通知の抽出結果を、住民が行動できる案内へ整理する。",
     instruction="""
 入力は行政通知から抽出済みのJSONです。
-原文にない内容を追加せず、住民向けの短い要約、期限、行動順のチェックリスト、
-必要書類、不明点、問い合わせ先をJSONで返してください。
-不明点は「〜は文書から確認できません」と明記してください。
-JSON以外は出力しないでください。
+
+住民向けに次の項目をJSONで返してください。
+
+- summary
+- deadline
+- actions
+- required_documents
+- unknowns
+- contact
+
+actionsの作成ルール：
+
+1. 入力JSONのactionsを最優先し、記載順を維持する。
+2. required_documentsがある場合、それらを用意・添付する行動として整理する。
+3. submission_methodがある場合、最後の提出行動として整理する。
+4. 文書に明記されていない制度条件や手続は追加しない。
+5. 情報が複数の項目に分かれていても、同じ文書内に根拠があれば行動として統合してよい。
+6. actionsが空でも、required_documentsまたはsubmission_methodに明確な行動根拠があれば、
+   「文書から確認できません」とせず、根拠のある範囲で行動を作成する。
+7. 本当に根拠がない事項だけをunknownsへ入れる。
+8. actionsは空配列にせず、文書に記載された手続を具体的な動詞で表現する。
+
+Markdownコードフェンスを付けず、JSONだけを返してください。
 """,
+
 )
 
 reviewer_agent = Agent(
@@ -154,6 +174,7 @@ async def organize_and_review(document: DocumentFacts) -> AnalysisResult:
         if isinstance(item, dict):
             return (
                 item.get("message")
+                or item.get("text")
                 or item.get("warning")
                 or item.get("detail")
                 or str(item)
