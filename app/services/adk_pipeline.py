@@ -12,7 +12,7 @@ from google.genai import types
 from app.models import AnalysisResult, DocumentFacts, ResidentView, StaffView
 
 
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 APP_NAME = "yomuyaku"
 
 organizer_agent = Agent(

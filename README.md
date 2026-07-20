@@ -50,7 +50,7 @@ gcloud run deploy yomuyaku \
   --source . \
   --region asia-northeast1 \
   --allow-unauthenticated \
-  --set-env-vars GEMINI_MODEL=gemini-2.5-flash \
+  --set-env-vars GEMINI_MODEL=gemini-3.5-flash \
   --set-secrets GOOGLE_API_KEY=GOOGLE_API_KEY:latest
 ```
 

@@ -12,3 +12,7 @@
 - レスポンシブな住民向け・職員向け結果画面
 - Cloud Run用Dockerfile
 - ヘルスチェックと基本テスト
+
+### Changed
+
+- Geminiの既定モデルを `gemini-2.5-flash` から `gemini-3.5-flash` へ更新

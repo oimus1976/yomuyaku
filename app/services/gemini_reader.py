@@ -28,7 +28,7 @@ def read_document(content: bytes, mime_type: str) -> DocumentFacts:
     encoded = base64.b64encode(content).decode("ascii")
 
     response = client.models.generate_content(
-        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        model=os.getenv("GEMINI_MODEL", "gemini-3.5-flash"),
         contents=[
             types.Part.from_bytes(data=base64.b64decode(encoded), mime_type=mime_type),
             READER_PROMPT,
