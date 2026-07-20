@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
@@ -11,6 +12,8 @@ from fastapi.templating import Jinja2Templates
 from app.sample_data import SAMPLE_RESULT, SAMPLE_TEXT
 from app.services.adk_pipeline import organize_and_review
 from app.services.gemini_reader import read_document
+
+logger = logging.getLogger("yomuyaku")
 
 BASE_DIR = Path(__file__).resolve().parent
 MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", 10 * 1024 * 1024))
@@ -61,6 +64,7 @@ async def analyze(file: UploadFile = File(...)):
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
+        logger.exception("Document analysis failed")
         raise HTTPException(
             status_code=500,
             detail="文書の解析に失敗しました。サンプルでの動作確認もお試しください。",

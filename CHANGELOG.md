@@ -16,3 +16,7 @@
 ### Changed
 
 - Geminiの既定モデルを `gemini-2.5-flash` から `gemini-3.5-flash` へ更新
+
+### Fixed
+
+- 任意文書の解析失敗時にCloud Runログへ例外詳細を記録するよう修正
